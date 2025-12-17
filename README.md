@@ -86,7 +86,7 @@ pip install numpy torch sympy -i https://pypi.tuna.tsinghua.edu.cn/simple
 python Your path/Code.py
 ```
 ```
-python Your ./Code.py
+python ./Code.py
 ```
 
 
