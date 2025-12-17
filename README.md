@@ -70,6 +70,18 @@ Output optimal model
 - Complex problem solving
 
 - 
-- Hyperparameter search
+###Hyperparameter search
+
+- **Learning F Features through Genetic Model Simulation:**
+
+**Installation:**
+```
+pip install numpy torch
+```
+Alternatively, you can use:
+```
+pip install numpy torch -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
 
 This architecture simulates biological evolution processes to conduct efficient searches within the neural network parameter space, achieving automated model optimization.
