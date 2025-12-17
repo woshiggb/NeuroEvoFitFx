@@ -42,7 +42,7 @@ class BaseModel(nn.Module):
         params = params.astype(np.float32)
         expected = self.input_size * self.hidden_size
         if len(params) != expected:
-            raise ValueError(f"参数数量不正确")
+            raise ValueError(f"参数数量不正确，期望 {expected}，得到 {len(params)}")
         
         with torch.no_grad():
             for name, param in self.first_layer.named_parameters():
@@ -109,13 +109,16 @@ class Ecosystem:
     
     def _generate_data(self, size):
         X = np.random.randn(size, self.input_size).astype(np.float32)
+        
         if self.input_size >= 2:
             y = F(X[:, 0], X[:, 1])
         else:
             y = F(X[:, 0], np.zeros_like(X[:, 0]))
         
         noise = np.random.randn(size, 1).astype(np.float32) * 0.1
-        return X, (y.reshape(-1, 1) + noise)
+        y = y.reshape(-1, 1) + noise
+        
+        return X, y
     
     def train_model(self, model, X_train, y_train, epochs=200, lr=0.01):
         X_train = X_train.astype(np.float32)
@@ -129,7 +132,8 @@ class Ecosystem:
         model.train()
         for _ in range(epochs):
             optimizer.zero_grad()
-            loss = criterion(model(X_tensor), y_tensor)
+            predictions = model(X_tensor)
+            loss = criterion(predictions, y_tensor)
             loss.backward()
             optimizer.step()
         
@@ -144,7 +148,8 @@ class Ecosystem:
         with torch.no_grad():
             X_tensor = torch.tensor(X, dtype=torch.float32)
             y_tensor = torch.tensor(y, dtype=torch.float32)
-            loss = nn.MSELoss()(model(X_tensor), y_tensor)
+            predictions = model(X_tensor)
+            loss = nn.MSELoss()(predictions, y_tensor)
         return loss.item()
     
     def run_generation(self, generation):
@@ -159,7 +164,7 @@ class Ecosystem:
         results = []
         for i, model in enumerate(self.models):
             try:
-                trained = self.train_model(model, X_train, y_train)
+                trained = self.train_model(copy.deepcopy(model), X_train, y_train)
                 train_err = self.evaluate_model(trained, X_train, y_train)
                 test_err = self.evaluate_model(trained, X_test, y_test)
                 
@@ -170,7 +175,7 @@ class Ecosystem:
                     test_err += adj
                 
                 avg_err = (train_err + test_err) / 2
-                denominator = 0.5 * 0.5 if 0.5 * 0.5 > 0 else 1e-10
+                denominator = max(0.5 * 0.5, 1e-10)
                 score = max(train_err, test_err) * (train_err + test_err) / denominator
                 
                 results.append({
@@ -180,7 +185,7 @@ class Ecosystem:
                     'score': score,
                     'model': trained
                 })
-            except:
+            except Exception as e:
                 results.append({
                     'train_err': float('inf'),
                     'test_err': float('inf'),
@@ -238,7 +243,7 @@ class Ecosystem:
                 X1, X2 = calculate_x1_x2(target_model, selected_model, target_err, selected_err)
                 child = self.genetic_operation(target_model, selected_model, X1, X2)
                 new_models.append(child)
-            except:
+            except Exception as e:
                 new_models.append(BaseModel(self.input_size, self.models[0].hidden_size, 1))
         
         self.models = new_models
@@ -274,6 +279,7 @@ class Ecosystem:
 def main():
     np.random.seed(42)
     torch.manual_seed(42)
+    random.seed(42)
     
     eco = Ecosystem(num_models=12, input_size=10, hidden_size=64)
     
@@ -287,6 +293,10 @@ def main():
         print(f"训练误差: {best_result['train_err']:.6f}")
         print(f"测试误差: {best_result['test_err']:.6f}")
         print(f"综合分数: {best_result['score']:.6f}")
+        
+        X_full, y_full = eco.data_pool
+        full_error = eco.evaluate_model(best_model, X_full, y_full)
+        print(f"完整数据集误差: {full_error:.6f}")
     else:
         print("未找到有效模型")
 
