@@ -6,8 +6,8 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 
-#def F(X, X2):
-#    return 1/(1+abs(X+X2))**2
+def F_(X, X2):
+    return 1/(1+abs(X+X2))**2
 
 class BaseModel(nn.Module):
     def __init__(self, input_size=10, hidden_size=64, output_size=1):
@@ -291,4 +291,5 @@ def main():
         print("未找到有效模型")
 
 if __name__ == "__main__":
+    F = F_
     main()
