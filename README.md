@@ -76,11 +76,17 @@ Output optimal model
 
 **Installation:**
 ```
-pip install numpy torch
+pip install numpy torch sympy
 ```
 Alternatively, you can use:
 ```
-pip install numpy torch -i https://pypi.tuna.tsinghua.edu.cn/simple
+pip install numpy torch sympy -i https://pypi.tuna.tsinghua.edu.cn/simple
+```
+```
+python Your path/Code.py
+```
+```
+python Your ./Code.py
 ```
 
 
